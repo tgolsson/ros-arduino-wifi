@@ -1,4 +1,14 @@
 #pragma once
+
+#define USE_ROS 1
+#ifdef USE_ROS
+#define USE_USBCON
+#include "ros.h"
+#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Pose2D.h"
+#include "std_msgs/Float32.h"
+#endif
+
 //this struct holds the pin numbers for the motor shield
 struct MotorShieldPins {
     int DIR_; //direction pin
@@ -55,7 +65,6 @@ struct PIDParameters {
 PIDParameters(float Kp, float Ki, float Kd, float u_max, float u_min, float I) : Kp_(Kp), Kd_(Kd), Ki_(Ki), u_max_(u_max), u_min_(u_min), I_(I) {};
 };    
 
-
 //////////////////////////////
 ///// Function declarations //
 //////////////////////////////
@@ -67,3 +76,4 @@ float minimumJerk(float t0, float t, float T, float q0, float qf);
 float pid(float e, float de, PIDParameters* p);
 void actuate(float, MotorShieldPins*);
 void calculateDiffSpeed(double angVel, double linVel);
+void velocityCallback(const geometry_msgs::Twist& msg);
