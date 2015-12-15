@@ -2,7 +2,7 @@
 
 #define USE_ROS 1
 #ifdef USE_ROS
-#define USE_USBCON
+//#define USE_USBCON
 #include "ros.h"
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/Pose2D.h"

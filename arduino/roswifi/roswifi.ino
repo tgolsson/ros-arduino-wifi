@@ -12,16 +12,22 @@
 /*       8h                                                               */
 /*   4b: Wifi-skölden --  Ansluta till server, deserialisering på Arduino */
 /*       8h  */
+
+#define USE_WIFICON
 // Standard libraries
 #include <math.h>
 
 // Headers for this project
+
+#include <WiFi.h>
 #include "roswifi.h"
+#include <ros.h>
 #include "PoseWithRotation.h"
 const int ENCODER_PIN_L = 22,
           ENCODER_PIN_R = 23;
 const double
-    KP = 80.0,
+    //KP = 80, KI = 20, KD = 0
+    KP = 40.0,
     KI = 20.0,
     KD = 0,//5e-2,
     V_MAX = 280.0,
@@ -31,7 +37,7 @@ const double
     M_PER_PULSE = 0.045 * 2.0 * M_PI / TICKS_ROTATION;
 
 const double dT = 1.0/30.0,
-    dT_Serial = 1.0/20.0;
+    dT_Serial = 1.0/10.0;
 
 // Defintions for left and right
 const int LEFT = 0,
@@ -56,17 +62,33 @@ ros::Publisher dataPublisher("/robot_0/plot_data", &plotData);
 #else
 PoseWithRotation pose;
 #endif
+
+char ssid[] = "BENNY";// Your network password here
+IPAddress server(192,168,3,2);
+int status = WL_IDLE_STATUS;
+int countLoops = 0;
+
 void setup()
 {
-
-    #ifdef USE_ROS
-    nh.initNode();
+    Serial.begin(9600); 
+    while (status != WL_CONNECTED) {
+      Serial.print("Attempting to connect to SSID: ");
+      Serial.println(ssid);
+      // Connect to WPA/WPA2 network. Change this line if using open or WEP network:    
+      status = WiFi.begin(ssid); //Dont use password since empty string will not work
+   
+      // wait 10 seconds for connection:
+      delay(5000);
+    }
+    
+    //#ifdef USE_ROS
+    nh.initNode(server);
     nh.subscribe(twistSubscriber);
     nh.advertise(odometryPublisher);
     nh.advertise(dataPublisher);
-    #else
-    Serial.begin(9600);    
-    #endif
+    //#else
+       
+    //#endif
 
     counter = 0;
     motors[LEFT] = new MotorShieldPins(2, 9, 3, A0, LEFT);
@@ -289,11 +311,15 @@ void loop() {
 
     long long deltaSerial = (tNew - tOld_Serial);
     double deltaDoubleSerial = (double)deltaSerial * 1.0e-6;
-    nh.spinOnce();
+    //nh.spinOnce();
     if (deltaDouble < dT)
     {
         return;
     }
+    Serial.print("Loopar: ");
+    Serial.println(countLoops);
+    countLoops++;
+    nh.spinOnce();
     updatePose();
     if (deltaDoubleSerial > dT_Serial)
     {
