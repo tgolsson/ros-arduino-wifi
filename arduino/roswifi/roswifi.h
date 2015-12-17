@@ -1,5 +1,6 @@
 #pragma once
 
+#define USBCON
 #define USE_ROS 1
 #ifdef USE_ROS
 //#define USE_USBCON
@@ -8,7 +9,7 @@
 #include "geometry_msgs/Pose2D.h"
 #include "std_msgs/Float32.h"
 #endif
-
+#include "PoseWithRotation.h"
 //this struct holds the pin numbers for the motor shield
 struct MotorShieldPins {
     int DIR_; //direction pin

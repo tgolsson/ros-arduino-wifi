@@ -13,18 +13,18 @@
 /*   4b: Wifi-skölden --  Ansluta till server, deserialisering på Arduino */
 /*       8h  */
 
-#define USE_WIFICON
 // Standard libraries
 #include <math.h>
 
 // Headers for this project
 
-#include <WiFi.h>
 #include "roswifi.h"
-#include <ros.h>
-#include "PoseWithRotation.h"
 const int ENCODER_PIN_L = 22,
-          ENCODER_PIN_R = 23;
+    ENCODER_PIN_R = 23,
+    LEFT = 0,
+    RIGHT = 1,
+    pwm_resolution = 4095;
+
 const double
     //KP = 80, KI = 20, KD = 0
     KP = 40.0,
@@ -34,23 +34,15 @@ const double
     TICKS_ROTATION = 230.4, // From datasheet
     WHB_RADIUS = 0.105,
     WH_RADIUS = 0.045,
-    M_PER_PULSE = 0.045 * 2.0 * M_PI / TICKS_ROTATION;
-
-const double dT = 1.0/30.0,
-    dT_Serial = 1.0/10.0;
-
-// Defintions for left and right
-const int LEFT = 0,
-    RIGHT = 1,
-    pwm_resolution = 4095;
-
+    M_PER_PULSE = 0.045 * 2.0 * M_PI / TICKS_ROTATION,
+    dT = 1.0/30.0,
+    dT_Serial = 1.0/2.0;
 
 MotorShieldPins * motors[2];
 EncoderStates * enc[2];
 PIDParameters * pid_motors[2];
 ControlStates * control_motors[2];
 long long tOld, tNew, tOld_Serial;
-static int counter;
 
 #ifdef USE_ROS
 geometry_msgs::Pose2D pose;
@@ -63,34 +55,21 @@ ros::Publisher dataPublisher("/robot_0/plot_data", &plotData);
 PoseWithRotation pose;
 #endif
 
-char ssid[] = "BENNY";// Your network password here
-IPAddress server(192,168,3,2);
-int status = WL_IDLE_STATUS;
 int countLoops = 0;
 
 void setup()
 {
-    Serial.begin(9600); 
-    while (status != WL_CONNECTED) {
-      Serial.print("Attempting to connect to SSID: ");
-      Serial.println(ssid);
-      // Connect to WPA/WPA2 network. Change this line if using open or WEP network:    
-      status = WiFi.begin(ssid); //Dont use password since empty string will not work
-   
-      // wait 10 seconds for connection:
-      delay(5000);
-    }
-    
-    //#ifdef USE_ROS
-    nh.initNode(server);
+    delay(1000);
+    Serial1.begin(38400); 
+    Serial.begin(38400);
+    nh.initNode();
+    delay(1000);
     nh.subscribe(twistSubscriber);
     nh.advertise(odometryPublisher);
     nh.advertise(dataPublisher);
-    //#else
-       
-    //#endif
 
-    counter = 0;
+
+    
     motors[LEFT] = new MotorShieldPins(2, 9, 3, A0, LEFT);
     motors[RIGHT] = new MotorShieldPins(5, 8, 6, A1, RIGHT);
 
@@ -302,6 +281,7 @@ void velocityCallback(const geometry_msgs::Twist& msg)
     double linear = msg.linear.x;
     double angular = msg.angular.z;
     calculateDiffSpeed(angular, linear);
+    Serial.println("Velocity callback running!");
 }
 #endif
 void loop() {
@@ -311,59 +291,66 @@ void loop() {
 
     long long deltaSerial = (tNew - tOld_Serial);
     double deltaDoubleSerial = (double)deltaSerial * 1.0e-6;
-    //nh.spinOnce();
+
+
+    
     if (deltaDouble < dT)
     {
         return;
     }
-    Serial.print("Loopar: ");
-    Serial.println(countLoops);
-    countLoops++;
+    /* Serial.print("Loopar: "); */
+    /* Serial.println(countLoops); */
+
+    /* countLoops++; */
+
     nh.spinOnce();
     updatePose();
     if (deltaDoubleSerial > dT_Serial)
     {
-#ifdef USE_ROS
         odometryPublisher.publish(&pose);
-        plotData.linear.x = enc[LEFT]->dp_;
-        plotData.linear.y = enc[RIGHT]->dp_;
-        plotData.angular.x = control_motors[LEFT]->r_;
-        plotData.angular.y = control_motors[RIGHT]->r_;
-        plotData.linear.z = control_motors[LEFT]->u_;
-        plotData.angular.z = control_motors[RIGHT]->u_;
-        dataPublisher.publish(&plotData);
-#else 
+        
+        /* plotData.linear.x = enc[LEFT]->dp_; */
+        /* plotData.linear.y = enc[RIGHT]->dp_; */
+        /* plotData.angular.x = control_motors[LEFT]->r_; */
+        /* plotData.angular.y = control_motors[RIGHT]->r_; */
+        /* plotData.linear.z = control_motors[LEFT]->u_; */
+        /* plotData.angular.z = control_motors[RIGHT]->u_; */
+        /* dataPublisher.publish(&plotData); */
         // Print encoder values
-        Serial.print("Encoder = (");
-        Serial.print(enc[LEFT]->p_);
-        Serial.print(", ");
-        Serial.print(enc[RIGHT]->p_);
-        Serial.println(")");
 
-        // Print position and rotation
-        Serial.print("Position (x,y,th): ");
-        Serial.print(pose.x);
-        Serial.print(", ");
-        Serial.print(pose.y);
-        Serial.print(", ");
-        Serial.println(pose.theta);
 
-        Serial.print("Target value: ");
-        Serial.print(control_motors[LEFT]->rf_);
-        Serial.print(", ");
-        Serial.println(control_motors[RIGHT]->rf_);
+
+        /* Serial.print("Encoder = ("); */
+        /* Serial.print(enc[LEFT]->p_); */
+        /* Serial.print(", "); */
+        /* Serial.print(enc[RIGHT]->p_); */
+        /* Serial.println(")"); */
+
+        /* // Print position and rotation */
+        /* Serial.print("Position (x,y,th): "); */
+        /* Serial.print(pose.x); */
+        /* Serial.print(", "); */
+        /* Serial.print(pose.y); */
+        /* Serial.print(", "); */
+        /* Serial.println(pose.theta); */
+
+        /* Serial.print("Target value: "); */
+        /* Serial.print(control_motors[LEFT]->rf_); */
+        /* Serial.print(", "); */
+        /* Serial.println(control_motors[RIGHT]->rf_); */
 
     
-        Serial.print("Control value: ");
-        Serial.print(control_motors[LEFT]->u_);
-        Serial.print(", ");
-        Serial.println(control_motors[RIGHT]->u_);
+        /* Serial.print("Control value: "); */
+        /* Serial.print(control_motors[LEFT]->u_); */
+        /* Serial.print(", "); */
+        /* Serial.println(control_motors[RIGHT]->u_); */
     
-        Serial.print("Setpoint value: ");
-        Serial.print(control_motors[LEFT]->r_);
-        Serial.print(", ");
-        Serial.println(control_motors[RIGHT]->r_);
-#endif
+        /* Serial.print("Setpoint value: "); */
+        /* Serial.print(control_motors[LEFT]->r_); */
+        /* Serial.print(", "); */
+        /* Serial.println(control_motors[RIGHT]->r_);*/
+
+        
         tOld_Serial = tNew;
     }
 
