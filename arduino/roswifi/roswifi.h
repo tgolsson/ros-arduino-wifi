@@ -7,7 +7,9 @@
 #include "ros.h"
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/Pose2D.h"
+#include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float32.h"
+#include "std_msgs/Empty.h"
 #endif
 #include "PoseWithRotation.h"
 //this struct holds the pin numbers for the motor shield
@@ -78,3 +80,6 @@ float pid(float e, float de, PIDParameters* p);
 void actuate(float, MotorShieldPins*);
 void calculateDiffSpeed(double angVel, double linVel);
 void velocityCallback(const geometry_msgs::Twist& msg);
+void resetOdometryCallback(const std_msgs::Empty& msg);
+void setPIDCallbackL(const geometry_msgs::Vector3& msg);
+void setPIDCallbackR(const geometry_msgs::Vector3& msg);

@@ -1,0 +1,51 @@
+\documentclass[11pt]{article}
+
+\include{preamble}
+
+%% For make-title
+\title{Laboration 3: Arduino WiFi ROS\\ {\small Sensors and Sensing}} \author{Benny Frost, Tom Olsson}
+\date{\today}
+
+\begin{document}
+\maketitle %Title area
+\begin{center}
+  \emph{All code for this exercise can be found at \\ \url{https://github.com/tgolsson/sensors-laboration2-xtion}} \\ \vspace{10pt}
+  \textbf{\Large In some of images and plots the ``variance'' is wrongly labeled as
+    ``standard deviation''. This is just a typesetting error in the images, and
+    not the actual values. All values are variances.}
+\end{center}
+\tableofcontents
+\lstlistoflistings % List of all code snippets
+\listoffigures % List of all figures
+\listoftables \lstset{
+  matchrangestart=t} %initialise the linerange-macro for \lstinput...
+
+
+\section{Motivation and theory}
+\subsection{PID with feedback}
+\subsection{Communication rates}
+\label{subsec:cr}
+\section{Implementation}
+\subsection{Controller node}
+\label{subsec:cn}
+
+
+\subsection{Passthrough node}
+\label{subsec:ptn}
+
+\subsection{Arduino node}
+\label{subsec:dd}
+
+\section{Results}
+\subsection{PID tuning}
+\label{subsec:pidt}
+
+
+\end{document}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
