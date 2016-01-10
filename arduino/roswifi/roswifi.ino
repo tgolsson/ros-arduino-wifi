@@ -19,6 +19,7 @@
 // Headers for this project
 
 #include "roswifi.h"
+#include "MoveOrder.h"
 const int ENCODER_PIN_L = 22,
     ENCODER_PIN_R = 23,
     LEFT = 0,
@@ -36,20 +37,21 @@ const double
     TICKS_ROTATION = 230.4, // From datasheet
     WHB_RADIUS = 0.105,
     WH_RADIUS = 0.045,
-    M_PER_PULSE = 0.045 * 2.0 * M_PI / TICKS_ROTATION,
+    M_PER_PULSE = WH_RADIUS * 2.0 * M_PI / TICKS_ROTATION,
     dT = 1.0/30.0,
     dT_Serial = 1.0/10.0,
     PWM_FACTOR = 0.05,
-    SMOOTHING_FACTOR = 0.1;
+    SMOOTHING_FACTOR = 0.10;
 
 MotorShieldPins * motors[2];
 EncoderStates * enc[2];
 PIDParameters * pid_motors[2];
 ControlStates * control_motors[2];
 long long tOld, tNew, tOld_Serial;
-
+WaypointSet * square;
 #ifdef USE_ROS
 geometry_msgs::Pose2D pose;
+geometry_msgs::Twist previous_vel_msg;
 geometry_msgs::Twist plotData;
 ros::NodeHandle nh;
 ros::Subscriber<geometry_msgs::Twist> twistSubscriber("/robot_0/velocity_commands", &velocityCallback);
@@ -58,6 +60,7 @@ ros::Subscriber<geometry_msgs::Vector3> pidSubscriberL("/robot_0/pid_tune_l", &s
 ros::Subscriber<geometry_msgs::Vector3> pidSubscriberR("/robot_0/pid_tune_r", &setPIDCallbackR);
 ros::Publisher odometryPublisher("/robot_0/odometry", &pose);
 ros::Publisher dataPublisher("/robot_0/plot_data", &plotData);
+
 #else
 PoseWithRotation pose;
 #endif
@@ -78,6 +81,8 @@ void setup()
     nh.advertise(odometryPublisher);
     nh.advertise(dataPublisher);
 
+    previous_vel_msg.linear.x = 0.0;
+    previous_vel_msg.angular.z = 0.0;
 
     
     motors[LEFT] = new MotorShieldPins(2, 9, 3, A0, LEFT);
@@ -106,7 +111,13 @@ void setup()
         initMotor(motors[i]);
     }
 
+    Point2D  squarePoints[] = {{0,0},{2,0},{2,2},{0,2},{0,0}};     
+    square = new WaypointSet(squarePoints, 5);
+
+
     calculateDiffSpeed(0.0, 0.0);
+
+
 }
 
 void actuate(float control, MotorShieldPins *mps)
@@ -129,7 +140,7 @@ void actuate(float control, MotorShieldPins *mps)
     }
     else
     {
-        controlNew = 0.0;   
+        controlNew = 0.0;
     }
     
     // Write to pin
@@ -155,7 +166,7 @@ void readEncoderLeft() {
     else
     {
         enc[LEFT]->p_--;
-    }    
+    }
 }
 
 void initMotor(MotorShieldPins* pins)
@@ -168,7 +179,7 @@ void initMotor(MotorShieldPins* pins)
     switch (pins->SIDE_)
     {
     case LEFT:
-        digitalWrite(pins->DIR_,HIGH); 
+        digitalWrite(pins->DIR_,HIGH);
         break;
     case RIGHT:
         digitalWrite(pins->DIR_,LOW);
@@ -200,7 +211,7 @@ void velocityControl(ControlStates* c_s, EncoderStates* e_s, MotorShieldPins* m_
     // Store for next cycle
     c_s->e_ = e;
     c_s->de_ = de;
-    c_s->u_ = ut;    
+    c_s->u_ = ut;
 }
 
 
@@ -273,7 +284,7 @@ void calculateDiffSpeed(double angVel, double linVel)
     double velRight = 0;
     if (angVel != 0)
     {
-        radius  = linVel / angVel;   
+        radius  = linVel / angVel;
         velLeft = (radius - WHB_RADIUS) * angVel;
         velRight = (radius + WHB_RADIUS) * angVel;
     }
@@ -281,10 +292,12 @@ void calculateDiffSpeed(double angVel, double linVel)
     {
         velLeft = velRight = linVel;
     }
-    control_motors[LEFT]->rf_ = velLeft * 1.0 / M_PER_PULSE;
-    control_motors[RIGHT]->rf_ = velRight * 1.0 / M_PER_PULSE;
+    velLeft /= M_PER_PULSE;
+    velRight /= M_PER_PULSE;
+   
+    control_motors[LEFT]->rf_ = velLeft;
+    control_motors[RIGHT]->rf_ = velRight;
     
-
     double controlOvershoot = max(control_motors[LEFT]->rf_, control_motors[RIGHT]->rf_)/V_MAX;
 
     if (controlOvershoot > 1.0)
@@ -296,15 +309,22 @@ void calculateDiffSpeed(double angVel, double linVel)
     {
         control_motors[i]->ri_ = enc[i]->dp_;
         control_motors[i]->r_ = enc[i]->dp_;
-        // Reset integral
 
+        double finishedOfPreviousMotion = (micros() - control_motors[i]->ti_) / (control_motors[i]->T_ - control_motors[i]->ti_);
 
-        // Start and end time
-
-        control_motors[i]->ti_ = micros();
-        // 0.006  = 3 s / 560 tps -- acceleration constant
-
+        if (finishedOfPreviousMotion > 1 || finishedOfPreviousMotion < 0)
+        {
+            finishedOfPreviousMotion = 0;
+        }
+        control_motors[i]->ti_ = micros();//
         control_motors[i]->T_ = control_motors[i]->ti_ + abs(control_motors[i]->ri_ - control_motors[i]->rf_) * 0.018*1e6;
+
+        /* double x = (control_motors[i]->T_ - control_motors[i]->ti_) * finishedOfPreviousMotion; */
+        /* control_motors[i]->ti_ -= x; */
+        /* control_motors[i]->T_ -= x/2.0; */
+
+//        control_motors[i]->ti_ = (control_motors[i]->ti_+micros())/2;
+//        control_motors[i]->T_ = control_motors[i]->T_ + dT/2.0; //abs(control_motors[i]->ri_ - control_motors[i]->rf_) * 0.024*1e6;
     }
 }
 
@@ -313,8 +333,7 @@ void calculateDiffSpeed(double angVel, double linVel)
 void resetOdometryCallback(const std_msgs::Empty& msg)
 {
     pose.x = 0;
-    pose.y = 0;
-    
+    pose.y = 0;    
     pose.theta = 0;
 }
 
@@ -322,14 +341,14 @@ void setPIDCallbackL(const geometry_msgs::Vector3& msg)
 {
     pid_motors[LEFT]->Kp_ = msg.x;
     pid_motors[LEFT]->Ki_ = msg.y;
-    pid_motors[LEFT]->Kd_ = msg.z;    
+    pid_motors[LEFT]->Kd_ = msg.z;
 }
 
 void setPIDCallbackR(const geometry_msgs::Vector3& msg)
-{    
+{
     pid_motors[RIGHT]->Kp_ = msg.x;
     pid_motors[RIGHT]->Ki_ = msg.y;
-    pid_motors[RIGHT]->Kd_ = msg.z;    
+    pid_motors[RIGHT]->Kd_ = msg.z;
 }
 
 void velocityCallback(const geometry_msgs::Twist& msg)
@@ -337,7 +356,6 @@ void velocityCallback(const geometry_msgs::Twist& msg)
     double linear = msg.linear.x;
     double angular = msg.angular.z;
     calculateDiffSpeed(angular, linear);
-    Serial.println("Velocity callback running!");
 }
 #endif
 void loop() {
@@ -357,14 +375,36 @@ void loop() {
     tOld = tNew;
 
     nh.spinOnce();
+
+    
     for (int i = 0; i < 2; i++)
     {
         velocityControl(control_motors[i], enc[i], motors[i], pid_motors[i]);
         actuate(control_motors[i]->u_, motors[i]);
     }
+    
     updatePose();
+    
     if (deltaDoubleSerial > dT_Serial)
     {
+
+        /* geometry_msgs::Twist vel_msg; */
+        /* if (!square->finished()){ */
+        /*     square->reinit(pose.x, pose.y); */
+        /*     vel_msg = square->getVelocities(pose.x, pose.y, pose.theta);         */
+        /* } */
+    
+        /* double diffLin = abs(previous_vel_msg.linear.x - vel_msg.linear.x); */
+        /* double diffAng = abs(previous_vel_msg.angular.z - vel_msg.angular.z); */
+
+        /* calculateDiffSpeed(vel_msg.angular.z, vel_msg.linear.x); */
+        /* previous_vel_msg.linear.x = vel_msg.linear.x; */
+        /* previous_vel_msg.angular.z = vel_msg.angular.z; */
+        
+        /* Serial.print("Velocity: "); */
+        /* Serial.print(vel_msg.linear.x); */
+        /* Serial.print(", "); */
+        /* Serial.println(vel_msg.angular.z); */
         odometryPublisher.publish(&pose);
         
         plotData.linear.x = enc[LEFT]->dp_;
