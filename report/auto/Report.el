@@ -13,5 +13,7 @@
     "subsec:cn"
     "subsec:ptn"
     "subsec:dd"
-    "subsec:pidt")))
+    "subsec:pidt")
+   (LaTeX-add-bibliographies
+    "references.bib")))
 

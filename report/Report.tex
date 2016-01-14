@@ -1,9 +1,10 @@
+
 \documentclass[11pt]{article}
 
 \include{preamble}
-
+\bibliographystyle{ieeetr}
 %% For make-title
-\title{Laboration 3: Arduino WiFi ROS\\ {\small Sensors and Sensing}} \author{Benny Frost, Tom Olsson}
+\title{Laboration 3: Differential Drive with WiFi control\\ {\small Sensors and Sensing}} \author{Benny Frost, Tom Olsson}
 \date{\today}
 
 \begin{document}
@@ -22,25 +23,45 @@
 
 
 \section{Motivation and theory}
+Section skrivs av Tom
+% About the project and why we do it; goals
 \subsection{PID with feedback}
+% How PID works; with feedback; deadband solution
 \subsection{Communication rates}
 \label{subsec:cr}
+% The communication and protocol differences between Serial and WiFi
+\subsection{Differential Drive}
+
 \section{Implementation}
+Section skrivs av Benny
+% Hardware + Softwares used
+\subsection{Physical design}
+% Difficulties and choices : wheels 2 or 1
+% Kopplingar
+
+\subsection{WiFi communication}
+% Problems with official WiFI shield
 \subsection{Controller node}
+% Implementation details here (message type)
 \label{subsec:cn}
 
 
 \subsection{Passthrough node}
+% Configuration and setup + code for passthrough node ; esp8266
 \label{subsec:ptn}
 
 \subsection{Arduino node}
+% Most of the code for the arduino sied; implementation details
 \label{subsec:dd}
 
 \section{Results}
+
 \subsection{PID tuning}
 \label{subsec:pidt}
 
+\subsection{Odometry accuracy}
 
+\bibliography{references.bib}
 \end{document}
 
 

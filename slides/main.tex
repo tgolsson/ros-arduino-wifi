@@ -10,7 +10,7 @@
 \usepackage{import}
 \usepackage[utf8]{inputenc}
 \usepackage{lipsum, listings, longtable}
-\usepackage{multicol, marginnote}
+\usepackage{multicol, marginnote, multimedia}
 %\usepackage{natbib}
 \usepackage{parskip, perpage, pgfplots} %the perpage package
 \usepackage{ragged2e, relsize}
@@ -160,6 +160,11 @@
 {\Large\insertinstitute}\\\vspace{0.5cm}
 {\small\today \hspace{\fill} \textcopyright\hspace{3pt}  Benny Frost, Tom Olsson }
 }
+\begin{frame}{Video: Figure 8}
+  \begin{centering}
+    \movie[externalviewer]{\larger Start playback}{20160111_001.mp4}
+  \end{centering}
+\end{frame}
 
 
 
@@ -223,6 +228,7 @@
 \end{frame}
 
 
+\section{WiFi}
 \begin{frame}{Adding the WiFi communication}
 \begin{itemize}
 \item<+-> The \texttt{ros\_lib} \textbf{\texttt{NodeHandle}} is a template class, and accepts a \texttt{Stream} interface object as the template argument
@@ -236,7 +242,6 @@
 \end{itemize}
 \end{itemize}
 \end{frame}
-
 \begin{frame}{Arduino WiFi}
   \begin{itemize}
   \item<+-> The official WiFi shield from Arduino \cite{wifishield}
@@ -258,6 +263,7 @@
     \item<+-> In this case, it is used like a router, only relaying information between two communicating devices
   \end{itemize}
 \end{frame}
+\section{Communication}
 \begin{frame}{Communication}
 	\begin{figure}[h]
 		\resizebox{1\linewidth}{!}{
@@ -345,14 +351,20 @@
 \item<8->[$\Rightarrow$] When reading empty, the Arduino will (by default) drop the message entirely and ask for a resynchronization... which will fail too
   \end{itemize}
 \end{frame}
+\section{Results and (possible) demo}
 \begin{frame}{Odometry measurements}
   \begin{itemize}
   \item<+-> Very random behaviour; and very inaccurate when doing ``goto'' commands. These were added as an afterthought, and this may affect their performance.
   \item<+-> The rear wheel has serious problems with movement and will often get stuck at odd angles causing the robot to drift
   \item<+-> Generally, the first line of a square will be perfectly straight, and then after the first turn it will keep turning slightly without $\theta$ reflecting this
   \item<+-> However, when manually controlling the robot and sending velocity commands it is much easier to get accurate readings
-    \item<+-> By doing this, it is easy to see that the error is introduced each time a turn is made, and that this error is caused by the swivel wheel going the wrong way when starting to move forward after the turn
+    \item<+-> By doing this, it is easy to see that the error is introduced each time a turn is made, and that this error is caused by the swivel wheel going the wrong way or getting stuck when starting to move forward after the turn
   \end{itemize}
+\end{frame}
+\begin{frame}{Video: Wheel demonstrations}
+  \begin{centering}
+    \movie[externalviewer]{\larger Start playback}{20160111_005.mp4}
+  \end{centering}
 \end{frame}
 { \smaller
   \bibliography{references}

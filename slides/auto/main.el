@@ -42,6 +42,7 @@
     "longtable"
     "multicol"
     "marginnote"
+    "multimedia"
     "parskip"
     "perpage"
     "pgfplots"
