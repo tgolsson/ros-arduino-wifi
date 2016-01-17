@@ -36,21 +36,32 @@ Section skrivs av Tom
 Section skrivs av Benny
 % Hardware + Softwares used
 \subsection{Physical design}
+The main body of the robot is build from aluminum plating and profiles to get a robust robot. To circuit board is attached to Plexiglas which then are attached to the main body. This is done to get a good insulation from the main body. The Plexiglas pieces is attached with Velcro so it will be easy to detach if necessary. At front the two motors with the driving wheels was mounted and two passive wheels where mounted at the back of the robot. The passive wheels are not swivel and there was a concern if this should work. The two electrical motors where two weak to be able to turn the robot because the friction against the floor was too high, it was then decided to mount a swivel wheel at the rear of the robot. 
+For controlling the robot, Arduino Due microcontroller is used with an Arduino motorshield and for communication Arduino WiFi shield is used. These two shields are made to sit on top of the Arduino Due. The probleme here is that the WiFi shield and Motor shield will also sit on top of each other, but since the WiFi shield and the Motor shield using the same I/O pin of the Arduino Due it was decided the only the WiFi shield should be mounted on top of the Arduino Due and the Motor shield should be mounted besides the Arduino Due and be connected to the Arduino Due with wires, and in this case it could be decided which I/O pins should be used for the Motor shield.In figure XXXX is how Arduino Due, Arduino Motor shield and ESP8266 is wired.
 % Difficulties and choices : wheels 2 or 1
 % Kopplingar
 
 \subsection{WiFi communication}
+During set up of the Arduino WiFi shield it was obvious that the communication was very slow, in fact it takes almost two seconds from sending data, to that it reached the destination. This was also confirmed from Internet sides[XXXXx]. During this search why it took so long there was another thing, the largest package that could be sent to the Arduino WiFi card is 92 bytes, if the package is larger there will be a silent failure. With all this the decision was to use another WiFi card, searching on Internet shown that a popular WiFi card is ESP8266.
+
 % Problems with official WiFI shield
 \subsection{Controller node}
+The node that are used to steer the robot was developed by Husqvarna for there lawn mower. This node fulfilled the requirements that was needed for this project. It is a Python script that reads from the keyboard and publish a code on the ROS bus.
 % Implementation details here (message type)
 \label{subsec:cn}
 
 
 \subsection{Passthrough node}
+The WiFi node is made simple, during setup it connects to a WiFi router that's address is hard coded. In the loop it reads the serial and write to the WiFi and read from the WiFi and writes to serial. To get it more stable it checks if it is connected, if the WiFi card is not connected to the router it will try to reconnect.
 % Configuration and setup + code for passthrough node ; esp8266
 \label{subsec:ptn}
 
 \subsection{Arduino node}
+This node has two PID controllers with its own P, I and D values, to set the velocity of the two wheels. It is necessary to have two PID controllers due to that the motors with its gearbox is not identical.
+On major problem when implementing PID controllers to control the electrical motor is the dead band of the motors. The output from the controller is 0 - 4096 and between 0 - around 700 nothing happens. To get around this there is coded like if the output is between 0 - 10 the output is clamped to 0, and if the output is between 11 - 700 the output is clamped to 700, else the output is clamped to be in between 0 - 4096.
+The input signal from the encoders is smoothed so the delay is around 300 ms, that means to get a signal change to propagate fully it takes around 300 ms, this will also mean there is a delay that PID controller don't know about, it put a value on the output but don't get a signal back that something happens and then it will increase it's output, in this way it will be a high overshot. To come around this, a fraction of the output is feed back into the input as a promised thing that will happen, so the controller will not put to high output and not overshot.
+For the communication with ESP8266 the Serial1 (TX1,RX1) is used instead of the usual Serial/USB (TX0,RX0), in this way it is still possible to send debug data to Arduino IDE.
+This node advertises on geometry_msgs/Twist to get the commands, it is linear.X and angular.Z that is used. Linear.X is for the linear speed and angular.Z is for the angular speed of the robot. 
 % Most of the code for the arduino sied; implementation details
 \label{subsec:dd}
 
