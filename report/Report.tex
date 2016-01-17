@@ -23,8 +23,15 @@
 
 
 \section{Motivation and theory}
-Section skrivs av Tom
-% About the project and why we do it; goals
+The goal of this project was to implement a differential drive robot based on the Robot Operation System [ROS] on Arduino, which can be controlled using a WiFi connection. While a differential drive is easy to implement and test using a wired connection, most realistic scenarios will require wireless operation. As ROS is very common in the scientific community, and Arduino is a cheap prototyping platform in comparison to prebuilt robots, this could allow a much larger freedom in robot design. \par
+
+The goals are:
+\begin{itemize}
+\item To construct a robot with two powered wheels
+\item Setup the two motors with a differential drive controller
+\item Implement WiFi communication between PC and Arduino 
+\item Tune the odometry
+\end{itemize}
 \subsection{PID with feedback}
 % How PID works; with feedback; deadband solution
 \subsection{Communication rates}
