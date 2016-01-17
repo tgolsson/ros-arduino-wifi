@@ -215,21 +215,19 @@ namespace ros {
                 
                 
                 if( data < 0 )
-                {
-                    
+                {                    
                     if (mode_ != MODE_FIRST_FF)        
                     {
                         delay(10);
                         data = hardware_.read();
                         if (data < 0)
                         {
-                            Serial.println("OOPS");
+                            Serial.println("Dropped message due to early end.");
                             break;
                         }
                     }
                     else
                         break;
-                            
                 }
                 Serial.print(data);
                 Serial.print(" ");

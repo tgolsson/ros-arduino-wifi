@@ -69,7 +69,7 @@
 
 class ArduinoHardware {
 public:
-    ArduinoHardware(SERIAL_CLASS* io , long baud= 9600){
+    ArduinoHardware(SERIAL_CLASS* io , long baud= 38400){
         iostream = io;
         baud_ = baud;
             
@@ -82,7 +82,7 @@ public:
 #elif !defined(USE_WIFICON)
         iostream = &Serial;
 #endif
-        baud_ = 9600;
+        baud_ = 38400;
             
     }
     ArduinoHardware(ArduinoHardware& h){
