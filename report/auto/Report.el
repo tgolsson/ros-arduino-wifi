@@ -9,7 +9,15 @@
     "article"
     "art11")
    (LaTeX-add-labels
+    "eq:et"
+    "eq:pid"
+    "fig:pid"
     "subsec:cr"
+    "eq:position1"
+    "eq:position2"
+    "fig:robot"
+    "fig:wiring"
+    "tikz:communicationschema"
     "subsec:cn"
     "subsec:ptn"
     "subsec:dd"

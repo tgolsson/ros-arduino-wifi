@@ -14,11 +14,11 @@
 \usepackage{siunitx}
 \usepackage{subcaption}
 \usepackage{tabularx}
+\usepackage{tikz}
 \usepackage{url}
 \usepackage{varioref}
 \usepackage{wrapfig}
 \usepackage{xcolor}
-
 \setlength{\belowcaptionskip}{-6pt}
 \makeatletter
 \lst@Key{matchrangestart}{f}{\lstKV@SetIf{#1}\lst@ifmatchrangestart}
@@ -61,6 +61,33 @@
 }
 
 
+\usetikzlibrary{shapes,arrows,positioning,calc}
+\tikzstyle{block} = [draw, fill=white, rectangle,
+minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=white, circle, node distance=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-,thin,black}]
+% \tikzstyle{rectangle connector}=[
+%   connector,
+%   to path={(\tikztostart) -- ++(#1,0pt) \tikztonodes |- (\tikztotarget) },
+%   pos=0.5]
+
+\usetikzlibrary{shapes.geometric, arrows,matrix, fit, patterns}
+\usetikzlibrary{positioning}
+\usetikzlibrary{decorations.text}
+\usetikzlibrary{decorations.pathmorphing}
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+\pgfplotsset{compat=1.12}
+\tikzstyle{startstop} 		= [rectangle,  rounded corners,minimum width=4cm, minimum height=1cm, text centered, draw=black, fill=red!30]
+\tikzstyle{process}   		= [rectangle, minimum width=4cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
+\tikzstyle{optionalprocess} = [rectangle, minimum width=4cm, minimum height=1cm, text centered, draw=black, fill=orange!30, dashed]
+\tikzstyle{io} 				= [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+  \tikzstyle{rectangle connector} = [draw, -latex']
+  
 \setlength{\fboxsep}{4pt}
 \DeclareCaptionFormat{myformat}{%
   \hspace{1pt}\fcolorbox{blue!20}{gray!20}{\footnotesize\parbox{\dimexpr\textwidth-17pt\relax}{#1#2\ttfamily#3}}\vspace{-4pt}
@@ -73,7 +100,7 @@
 \labelformat{equation}{(#1)}
 
 %%% Math typesetting macros
-\newcommand{\di}[2]{#1_\textup{#2}} % Descriptive Index: Macro for quick upright index (as opposed to a variable index, which should be italic)
+\newcommand{\di}[2]{{#1_{\textup{#2}}}} % Descriptive Index: Macro for quick upright index (as opposed to a variable index, which should be italic)
 
 
 \renewcommand{\lstlistlistingname}{Code listings}
