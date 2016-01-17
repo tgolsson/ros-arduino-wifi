@@ -12,7 +12,8 @@
     "eq:et"
     "eq:pid"
     "fig:pid"
-    "subsec:cr"
+    "sec:protocol"
+    "sec:odometrymath"
     "eq:position1"
     "eq:position2"
     "fig:robot"
@@ -21,7 +22,14 @@
     "subsec:cn"
     "subsec:ptn"
     "subsec:dd"
-    "subsec:pidt")
+    "eq:slidingwindow"
+    "subsec:pidt"
+    "tab:pid"
+    "sec:odometry"
+    "tab:ccw"
+    "tab:cw"
+    "tab:straight"
+    "tab:singleturn")
    (LaTeX-add-bibliographies
     "references.bib")))
 

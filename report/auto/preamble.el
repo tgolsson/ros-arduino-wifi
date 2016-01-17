@@ -28,6 +28,7 @@
     "hyperref"
     "listings"
     "mathtools"
+    "pgfplots"
     "siunitx"
     "subcaption"
     "tabularx"
