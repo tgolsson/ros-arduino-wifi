@@ -321,13 +321,16 @@ is shown in fig. \vref{tikz:communicationschema}.\par
 }]{/home/tgo/Arduino/libraries/ros_lib/ros/node_handle.h}
 
 \subsection{Controller node}
+\label{subsec:cn}
 The node used to steer the robot was developed by Husqvarna for their lawn mower
 \emph{Auto Mower 320} and used for research at Örebro University. This node
 fulfilled the requirements that was needed for this project. It is a Python
 script that reads from the keyboard and publishes a
 \texttt{geometry\_msgs::Twist} message on the ROS bus. The message uses
 \texttt{linear.x} for forward speed and \texttt{angular.z} for angular speed.
-\label{subsec:cn}
+
+The PC also runs the \texttt{roscore} as well as \texttt{rosserial\_python} in
+TCP mode.
 
 
 \subsection{Passthrough node}
@@ -338,8 +341,6 @@ function it reads from the serial and writes to the WiFi; as well as from the
 WiFi to the serial as was shown in fig. \vref{tikz:communicationschema}. To make
 it more reliable the node checks both network and server connection each
 iteration, and attempts to reconnect if any issues are detected. \par
-The PC also runs the \texttt{roscore} as well as \texttt{rosserial\_python} in
-TCP mode.
 \subsection{Arduino node}
 \label{subsec:dd}
 This node has two PID controllers with their own $\di{K}{P}$, $\di{K}{I}$ and
