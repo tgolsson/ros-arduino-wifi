@@ -338,7 +338,7 @@ function it reads from the serial and writes to the WiFi; as well as from the
 WiFi to the serial as was shown in fig. \vref{tikz:communicationschema}. To make
 it more reliable the node checks both network and server connection each
 iteration, and attempts to reconnect if any issues are detected. \par
-The PC also runs the \texttt{roscore} as well as \texttt{rosserial_python} in
+The PC also runs the \texttt{roscore} as well as \texttt{rosserial\_python} in
 TCP mode.
 \subsection{Arduino node}
 \label{subsec:dd}
@@ -378,7 +378,7 @@ For the communication with ESP8266 the Serial1 (\texttt{TX1,RX1}) is used
 instead of the usual Serial/USB (\texttt{TX0,RX0}). With this setup it is still
 possible to send debug data to the Arduino IDE with the USB connection.\par
 
-The Arduino program uses \texttt{rosserial_arduino} to handle all communication through the \texttt{NodeHandle}. This node subscribes to \texttt{/robot\_0/velocity\_commands}
+The Arduino sketch uses \texttt{rosserial\_arduino} to handle all communication through the \texttt{NodeHandle}. The node subscribes to \texttt{/robot\_0/velocity\_commands}
 (\texttt{geometry\_msgs::Twist}) to get the commands. It advertises its pose on
 \texttt{/robot\_0/odometry} (\texttt{geometry\_msgs::Pose2D}). The Arduino
 \texttt{loop} function runs at 30 Hz and the advertised topics are published
