@@ -10,7 +10,7 @@
 \begin{document}
 \maketitle %Title area
 \begin{center}
-  \emph{All code for this exercise can be found at \\
+  \emph{All code for this project can be found at \\
     \url{https://github.com/tgolsson/ros-arduino-wifi}}
 \end{center}
 \tableofcontents
@@ -132,7 +132,7 @@ receiving half the message, a connection dropout, etc.
 A differential drive is a kinematic model for two individually controlled wheels
 used to control both speed and rotation by altering the relative speed between
 the wheels. The controller implemented here is an inverse kinematic model; i.e.,
-the desired output is given and then the kinematic model is based to give these
+the desired output is given and then the parameters for the controller are calculated to give these
 output parameters. \par
 {\footnotesize
   \begin{tabular}{l l l}
@@ -189,7 +189,7 @@ eq. \ref{eq:position1}-\vref*{eq:position2}. \par
   \end{align}}
 
 \section{Implementation}
-The purpose of this project is to build a robot with two drive wheels. This
+The purpose of this project was to build a robot with two drive wheels. This
 robot shall use an Arduino Due controller board with a differential drive
 controller for these wheels, and communicate to a master node using WiFi and
 TCP/IP. Part of the project is also measuring and tuning the accuracy for the
@@ -201,10 +201,10 @@ The project used an \emph{Arduino Due} microcontroller \cite{arduinodue}, with
 the \emph{Arduino Motor Shield R3} \cite{motorshield}. These are programmed
 using Serial-over-USB; with the dedicated IDE. The version of the IDE used is
 1.6.5. The project also includes usage of the \emph{Robot Operating System}
-[ROS], version \emph{Indigo Igloo}. Two WiFi modules were tested during the
-project, the official \emph{WiFi Shield R3} \cite{wifishield} as well as the
-\emph{ESP8266} \cite{ESP8266}. \par
-
+[ROS], version \emph{Indigo Igloo}. All ROS packages were installed directly
+from GitHub. Two WiFi modules were tested during the project, the official
+\emph{WiFi Shield R3} \cite{wifishield} as well as the \emph{ESP8266}
+\cite{ESP8266}. \par
 The motors used are the \emph{Micro Motors RHE158 75:1 12V DC} \cite{motors}.
 
 % Hardware + Softwares used
@@ -224,21 +224,23 @@ robot. The robot is shown in fig. \vref{fig:robot}. \par
 \begin{figure}[ht]
   \centering
   \includegraphics[width=.6\textwidth]{figures/robot.jpg}
-  \captionof{figure}[Physical design of the robot]{\label{fig:robot} Physical design of the robot. The centered swivel wheel is at the back
-    of the robot. Motor battery pack not mounted for better viewing.}
+  \captionof{figure}[Physical design of the robot]{\label{fig:robot} Physical
+    design of the robot. The centered swivel wheel is at the back of the
+    robot. Motor battery pack not mounted for better viewing.}
 \end{figure}
 
 
 For controlling the robot, an Arduino Due microcontroller is used with an
-Arduino Motor Shield, and for communication an Arduino WiFi shield is used. These
-two shields are made to sit on top of the Arduino Due. However, this means that
-the WiFi shield and Motor shield will also sit on top of each other. Since the
-WiFi shield and the Motor shield use the same I/O pins of the Arduino Due it was
-decided that only the WiFi shield should be mounted on top of the Arduino Due
-and the Motor shield should be mounted next to the main board and be connected
-to the Arduino Due with wires, and by doing this I/O pins could be rerouted to
-be used for the Motor shield. Fig. \vref{fig:wiring} shows how the Arduino Due,
-Arduino Motor shield and ESP8266 are connected. \par
+Arduino Motor Shield, and for communication an Arduino WiFi shield is
+used. These two shields are made to sit on top of the Arduino Due. However, this
+means that the WiFi shield and Motor shield will also sit on top of each
+other. Since the WiFi shield and the Motor shield use the same I/O pins of the
+Arduino Due it was decided that only the WiFi shield should be mounted on top of
+the Arduino Due and the Motor shield should be mounted next to the main board
+and be connected to the Arduino Due with wires, and by doing this I/O pins could
+be rerouted to be used for the Motor shield. The WiFi shield was eventually
+replaced with an EP8266 as described in the next section. Fig. \vref{fig:wiring}
+shows how the Arduino Due, Arduino Motor shield and ESP8266 are connected. \par
 
 \begin{figure}[ht]
   \centering
@@ -248,21 +250,22 @@ Arduino Motor shield and ESP8266 are connected. \par
 
 \subsection{WiFi communication}
 During setup and configuration of the Arduino WiFi shield it was obvious that
-the communication was  slow, taking almost two seconds from sending data to
+the communication was slow, taking almost two seconds from sending data to
 reaching the destination, which was documented by others online
 \cite{wificard1,wificard2}. Similarly, it was discovered that the largest
 package that could be sent to the Arduino WiFi card is 92 bytes. If the package
-is larger there will be a silent failure. With all this it was decided to use
-another WiFi card. We decided to use a  popular WiFi card, ESP8266. \par
+is larger there will be a silent failure. Because of this it was decided to use
+another WiFi card. We decided to use a popular combined microcontroller/WiFi
+card, ESP8266. \par
 
 The ESP8266 is a standalone microcontroller with built-in WiFi support
 \cite{ESP8266}. This card is often recommended instead of the official WiFi card
 both because of its cost as well as superior performance, which is the reason we
 use it. Similarly to the normal Arduino boards it comes with its own toolchain,
-and therefore runs the code on its own in a separate process from the main
-Arduino board. This allows the card to be setup to handle I/O asynchronously
-from the main control loop which is a big performance gain. The final
-communication setup is shown in fig. \vref{tikz:communicationschema}.\par
+and runs the code on its own in a separate process from the main Arduino
+board. This allows the card to be setup to handle I/O asynchronously from the
+main control loop which is a big performance gain. The final communication setup
+is shown in fig. \vref{tikz:communicationschema}.\par
 
 	\begin{figure}[h]
           \resizebox{1\linewidth}{!}{
@@ -303,10 +306,19 @@ communication setup is shown in fig. \vref{tikz:communicationschema}.\par
             communication}\label{tikz:communicationschema}
 	\end{figure}
 
-        To solve the issues raised in section \vref{sec:protocol} the baud rate between the ESP8266 and the Arduino Due was reduced by 25 \% compared to what \texttt{ros\_lib} usually runs at; to 38.4k. To further reduce the risk of dropping messages, the \texttt{NodeHandle} class was also modified to add a retry clause; where it would retry a second time whenever a message was at risk of being discarded. The code for this is shown in listing \vref{lst:retry}.
+        The PC and the Arduino both run \texttt{rosserial} to handle all
+        communication and serialisation. To solve the issues raised in section
+        \vref{sec:protocol} the baud rate between the ESP8266 and the Arduino
+        Due was reduced by 33 \% compared to what \texttt{ros\_lib} uses normally
+        at; to 38.4k from 57.6k. To further reduce the risk of dropping messages, the
+        \texttt{NodeHandle} class was also modified to add a retry clause; where
+        it would retry a second time whenever a message was at risk of being
+        discarded. The code for this is shown in listing \vref{lst:retry}.
 
 \newpage
-\lstinputlisting[label=lst:retry,language=c++,caption={Code for error recovery in NodeHandle}, linerange={217-231 }]{/home/tgo/Arduino/libraries/ros_lib/ros/node_handle.h}
+\lstinputlisting[label=lst:retry,language=c++,caption={Code for error recovery
+  in NodeHandle}, linerange={217-231
+}]{/home/tgo/Arduino/libraries/ros_lib/ros/node_handle.h}
 
 \subsection{Controller node}
 The node used to steer the robot was developed by Husqvarna for their lawn mower
@@ -320,14 +332,14 @@ script that reads from the keyboard and publishes a
 
 \subsection{Passthrough node}
 \label{subsec:ptn}
-The WiFi node is also simple. During startup it connects to a dedicated
-WiFi router, and then connects to a hard-coded server IP. In the main
-\texttt{loop} function it reads from the serial and writes to the WiFi; as well
-as from the WiFi to the serial as was shown in
-fig. \vref{tikz:communicationschema}. To make it more reliable the node checks
-both network and server connection each iteration, and attempts to reconnect if
-any issues are detected. \par
-
+The WiFi node is also simple. During startup it connects to a dedicated WiFi
+router, and then connects to a hard-coded server IP. In the main \texttt{loop}
+function it reads from the serial and writes to the WiFi; as well as from the
+WiFi to the serial as was shown in fig. \vref{tikz:communicationschema}. To make
+it more reliable the node checks both network and server connection each
+iteration, and attempts to reconnect if any issues are detected. \par
+The PC also runs the \texttt{roscore} as well as \texttt{rosserial_python} in
+TCP mode.
 \subsection{Arduino node}
 \label{subsec:dd}
 This node has two PID controllers with their own $\di{K}{P}$, $\di{K}{I}$ and
@@ -347,10 +359,13 @@ this; if the output is between 0-10 the output is set to 0, and if the output is
 between 11-700 the output is set to 700, else the output is clamped to be in
 between 700-4095.\par
 
-The velocity of the motors is calculated by counting the number of interrupts from the motors during one cycle of the controller. This input signal from the encoders is then smoothed with a sliding window filter (eq. \vref{eq:slidingwindow}), which
-means to get a velocity change to be fully visible it takes around 330 ms with $\alpha=0.1$ and the controller running at 30 Hz. This
-also means there is a delay in the signal that the PID controller receives,
-which skews the error value and by extension causes the controller to
+The velocity of the motors is calculated by counting the number of interrupts
+from the motors during one cycle of the controller. This input signal from the
+encoders is then smoothed with a sliding window filter
+(eq. \vref{eq:slidingwindow}), which means to get a velocity change to be fully
+visible it takes around 330 ms with $\alpha=0.1$ and the controller running at
+30 Hz. This also means there is a delay in the signal that the PID controller
+receives, which skews the error value and by extension causes the controller to
 overreact. As this mostly affects the integral term, it can cause the controller
 to overshoot by a large margin. To counteract this, a fraction of the output is
 fed back into the input as a promised velocity that will happen, so the
@@ -361,11 +376,13 @@ controller will not ramp up to high output and therefore not overshoot.\par
 \end{align}
 For the communication with ESP8266 the Serial1 (\texttt{TX1,RX1}) is used
 instead of the usual Serial/USB (\texttt{TX0,RX0}). With this setup it is still
-possible to send debug data to the Arduino IDE.\par
+possible to send debug data to the Arduino IDE with the USB connection.\par
 
-This node subscribes to \texttt{/robot\_0/velocity\_commands}
+The Arduino program uses \texttt{rosserial_arduino} to handle all communication through the \texttt{NodeHandle}. This node subscribes to \texttt{/robot\_0/velocity\_commands}
 (\texttt{geometry\_msgs::Twist}) to get the commands. It advertises its pose on
-\texttt{/robot\_0/odometry} (\texttt{geometry\_msgs::Pose2D}). The Arduino \texttt{loop} function runs at 30 Hz and the advertised topics are published every third iteration.
+\texttt{/robot\_0/odometry} (\texttt{geometry\_msgs::Pose2D}). The Arduino
+\texttt{loop} function runs at 30 Hz and the advertised topics are published
+every third iteration.
 
 \section{Results}
 Overall the system performs well programmatically, with no bugs or crashes
@@ -373,7 +390,7 @@ inside the Arduino or the ESP8266. The device seems to run at a consistent
 speed, and reacts quickly to new commands. There are some issues related to
 network connectivity, with a dropped message once every two minutes on average,
 as well as one recoverable connection loss in 30 minutes of runtime. However,
-during movement these have no noticeable impact. \par
+during execution these have no noticeable impact. \par
 
 One major factor in network functionality seems to be the voltage of the ESP8266
 battery pack. It is intended to operate with 3.3 V input voltage, and if it
@@ -406,11 +423,12 @@ term was added to the controller. The feedback term allowed us to reduce the
 minimum-jerk rise-time while keeping overshoot low on large velocity changes. It
 does so by acting as a promised velocity. Since the output of the PID - and by
 extension the PWM value - maps directly to velocity, an output value is
-instantly actuated as a change in speed. However, only 10 \% of this change will
-be visible in the next iteration, and then 19 \%, and so on. By feeding back the
-PWM value (converted to the internal velocity measurement) we can reduce the
-error in proportion to our output PWM value, which allows the error to closely
-track the real error without smoothing applied. \par
+instantly actuated as a change in speed. However due to the sliding window smoothing, only 10 \% of this change will
+be visible in the next iteration, and then
+19 \%, and so on. By feeding back the PWM value (converted to the internal
+velocity measurement) we can reduce the error in proportion to our output PWM
+value, which allows the error to closely track the real error without smoothing
+applied. \par
 
 Our final PID values are shown in table \vref{tab:pid}. These values are tuned
 for movement on the ground with all battery packs on board. We found that the
@@ -424,7 +442,7 @@ reliable movement and quick reactions to commands. \par
   23  & $\di{K}{P}$ & 24 \\
   36  & $\di{K}{I}$ & 35 \\
   0.1  & $\di{K}{D}$ & 0.1 \\
-  0.05  & $Feedback$ & 0.05 \\
+  0.05  & $Feedback$ & 0.05 
 \end{tabular}
 \captionof{table}[PID: Final parameters]{The final values used for the left
   respectively right motor controller. \label{tab:pid}}
@@ -434,19 +452,19 @@ reliable movement and quick reactions to commands. \par
 
 \subsection{Odometry accuracy\label{sec:odometry}}
 The position estimation of the robot (as described in section
-\vref{sec:odometrymath}) is accurate given a few requirements, but
-inaccurate if these are not met. During straight line or long smooth movements
-the robot has a relative error of less than 1 \%. However when executing
-movements with multiple velocity changes the odometry does not keep up with the
-turning; and becomes inaccurate. In this case, the errors can accumulate up to
-3-4 \% of the distance traveled. \par
+\vref{sec:odometrymath}) is accurate given a few constraints, but inaccurate if
+these are not met. During straight line or long smooth movements the robot has a
+relative error of less than 1 \%. However when executing movements with multiple
+changes in angular velocity the odometry does not keep up with the turning; and becomes
+inaccurate. In this case, the errors can accumulate up to 3-4 \% of the distance
+traveled. \par
 
 One large part of this is the specific swivel wheel we use at the rear. When
 starting with the wheel properly aligned with the direction of travel the errors
-are small. However, after turning the wheel may be orthogonal to the
-vehicles direction, and acts as a lever to twist the robot. However, this wheel
-is not intended for usage in robots, and could therefore skew the results. The
-property we believe influences the performance is the distance between the wheel
+are small. However, after turning the wheel may be orthogonal to the vehicles
+direction, and acts as a lever to twist the robot. However, this wheel is not
+intended for usage in robots, and could therefore skew the results. The property
+we believe influences the performance is the distance between the wheel
 attachment rotation point, and the wheel friction point. In the case of our
 wheel, this is almost as large as the wheel's radius. This means that to align
 with the vehicles direction, the wheel needs to start rotating. During this
@@ -461,7 +479,7 @@ opposite. In that case, the friction was orthogonal to the direction of travel
 at all times, and therefore caused slippage during fast turning instead, causing
 underturning. When testing the setup we found that a 90$^\circ$ turn could
 result in as little as {30-45}$^\circ$ of actual turning, which is obviously
- worse than the performance of the swivel wheel. \par
+worse than the performance of the swivel wheel. \par
 
 We measured the odometry with four different movement patterns. In all cases,
 each movement action was discrete, i.e., each movement was fully completed
@@ -474,9 +492,9 @@ difference between odometry position and actual position. As can be seen in
 tables \ref{tab:ccw} and \ref{tab:cw} there is a high error during square
 movements, especially when moving clockwise. The error is measured as absolute
 value to make comparison easier, and to prevent opposite signs from skewing the
-score. As can be seen there is also  better performance when doing
-counterclockwise turns instead of clockwise turns, though the sample is
-small in this case. \par
+score. As can be seen there is also better performance when doing
+counterclockwise turns instead of clockwise turns, though the sample is small in
+this case. \par
 
 \begin{center}
   \begin{tabular}{r|cc}
@@ -502,21 +520,23 @@ small in this case. \par
     clockwise movement of a 2 m square.\label{tab:cw}}\par
 \end{center}
 In order to prove the hypothesis that the number of turns has a correlation with
-the actual performance we also measured the errors for a straight line as well as with a single turn as shown in tables \ref{tab:straight} and
+the actual performance we also measured the errors for a straight line as well
+as with a single turn as shown in tables \ref{tab:straight} and
 \vref{tab:singleturn}. As it was impossible to accurately measure the error in
 $x$ and $y$ during the straight line while still moving a reasonable distance,
 we calculated the hypotenuse of the position reported by the odometry and
 compared this with the distance traveled in the real world. Obviously, if the
 odometry is accurate these should be equal to each other. As can be seen in
-table \ref{tab:straight} the error over almost four meters is less than 2 centimeters;
-compared to 40 centimeters over 8 meters in the case of the clockwise square
-above. \par
+table \ref{tab:straight} the error over almost four meters is less than 2
+centimeters; compared to 40 centimeters over 8 meters in the case of the
+clockwise square above. \par
 To further prove this, we also measured the error when moving the full line and
 coming back again; as this is the same method as with the square but with a
 single \ang{180} rotation. As shown in table \ref{tab:singleturn} the error is
 still small compared to above, though slightly bigger than in the case of no
-turns. This, in addition to our visual observation of the robots
-movement and the swivel wheel specifically shows that the error in measurements is directly proportional to the number of direction changes in the path.
+turns. This, in addition to our visual observation of the robots movement and
+the swivel wheel specifically shows that the error in measurements is directly
+proportional to the number of direction changes in the path.
 \begin{center}\begin{tabular}{r|ccc}
                 Iteration & Measured [m] & Odometry [m] & |Error| [cm] \\ \hline
                 1 & 3.84 & 3.81 & 2.97 \\
